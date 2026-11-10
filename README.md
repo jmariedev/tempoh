@@ -1,4 +1,4 @@
-# Choreo HQ
+# tempoh
 
 A choreography tracker for dance teachers. It keeps every dance's dancers, progress, song, notes, and performance date in one place, with Notion as the database.
 
