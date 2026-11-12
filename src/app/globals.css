@@ -425,6 +425,33 @@ button:disabled {
   background-color: var(--hover);
 }
 
+.filter-clear {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 44px;
+  padding: 0 18px;
+  border: none;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--muted);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.4s var(--ease), color 0.4s var(--ease);
+}
+
+.filter-clear:hover {
+  background-color: var(--tile);
+  color: var(--ink);
+}
+
+.filter-clear:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 2px;
+}
+
 /* Native arrows sit flush against the edge, so every dropdown draws its own with room around it. */
 .filter-select,
 select.input {

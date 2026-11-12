@@ -7,6 +7,7 @@ import {
   IconSelector,
   IconUpload,
   IconUsers,
+  IconX,
 } from "@tabler/icons-react";
 import { useState, type CSSProperties, type DragEvent, type ReactNode } from "react";
 import { draggingFiles, droppedSong, readPref, writePref } from "@/lib/prefs";
@@ -41,6 +42,26 @@ function sortDances(a: Dance, b: Dance) {
 const FILTERS = ["All", ...PROGRESS] as const;
 const TYPES = ["All", "Solo", "Duo", "Trio", "Group"] as const;
 type TypeFilter = (typeof TYPES)[number];
+// Payment and contract are only tracked on solos, so these filters show solos only.
+// A blank payment reads as Unpaid and a blank contract as Not sent, matching the cards.
+const PAYMENTS = ["All", "Not paid yet", "Unpaid", "Partial paid", "Paid"] as const;
+type PaymentFilter = (typeof PAYMENTS)[number];
+const CONTRACTS = ["All", "Not signed yet", "Not sent", "Sent", "Signed"] as const;
+type ContractFilter = (typeof CONTRACTS)[number];
+
+function paymentMatches(dance: Dance, f: PaymentFilter) {
+  const payment = dance.payment ?? "Unpaid";
+  if (f === "All") return true;
+  if (f === "Not paid yet") return payment !== "Paid";
+  return payment === f;
+}
+
+function contractMatches(dance: Dance, f: ContractFilter) {
+  const contract = dance.contract ?? "Not sent";
+  if (f === "All") return true;
+  if (f === "Not signed yet") return contract !== "Signed";
+  return contract === f;
+}
 
 export default function DancesView(props: Props) {
   const { dances, dancers, choreographers, view, onPlay, onStatus, onDropSong, onEdit, onDelete } = props;
@@ -66,15 +87,41 @@ export default function DancesView(props: Props) {
     setChoreographerState(id);
     writePref("choreographer", id);
   };
+  const [paymentFilter, setPaymentFilterState] = useState<PaymentFilter>(() => readPref("payment", PAYMENTS, "All"));
+  const setPaymentFilter = (f: PaymentFilter) => {
+    setPaymentFilterState(f);
+    writePref("payment", f);
+  };
+  const [contractFilter, setContractFilterState] = useState<ContractFilter>(() =>
+    readPref("contract", CONTRACTS, "All"),
+  );
+  const setContractFilter = (f: ContractFilter) => {
+    setContractFilterState(f);
+    writePref("contract", f);
+  };
 
   const byId = new Map(dancers.map((d) => [d.id, d]));
   // A saved choreographer that was since deleted shouldn't hide every dance.
   const activeChoreographer = choreographers.some((c) => c.id === choreographer) ? choreographer : "";
+  const soloOnly = paymentFilter !== "All" || contractFilter !== "All";
   const inScope = dances.filter(
     (d) =>
       (!activeChoreographer || d.choreographerId === activeChoreographer) &&
-      (typeFilter === "All" || danceType(d.dancerIds.length) === typeFilter),
+      (typeFilter === "All" || danceType(d.dancerIds.length) === typeFilter) &&
+      (!soloOnly || danceType(d.dancerIds.length) === "Solo") &&
+      paymentMatches(d, paymentFilter) &&
+      contractMatches(d, contractFilter),
   );
+  const hasSolos = dances.some((d) => danceType(d.dancerIds.length) === "Solo");
+  const anyFilter = filter !== "All" || typeFilter !== "All" || !!activeChoreographer || soloOnly;
+  const clearFilters = () => {
+    setFilter("All");
+    setTypeFilter("All");
+    setChoreographer("");
+    setPaymentFilter("All");
+    setContractFilter("All");
+  };
+  const listKey = `${filter}-${typeFilter}-${activeChoreographer}-${paymentFilter}-${contractFilter}`;
   const shown = inScope.filter((d) => filter === "All" || d.progress === filter).sort(sortDances);
 
   const filters: { key: Progress | "All"; count: number; color: string }[] = [
@@ -317,6 +364,40 @@ export default function DancesView(props: Props) {
             ))}
           </select>
         )}
+        {(hasSolos || soloOnly) && (
+          <>
+            <select
+              className="filter-select"
+              value={paymentFilter}
+              onChange={(e) => setPaymentFilter(e.target.value as PaymentFilter)}
+              aria-label="Filter solos by payment"
+            >
+              {PAYMENTS.map((p) => (
+                <option key={p} value={p}>
+                  {p === "All" ? "All payments" : p}
+                </option>
+              ))}
+            </select>
+            <select
+              className="filter-select"
+              value={contractFilter}
+              onChange={(e) => setContractFilter(e.target.value as ContractFilter)}
+              aria-label="Filter solos by contract"
+            >
+              {CONTRACTS.map((c) => (
+                <option key={c} value={c}>
+                  {c === "All" ? "All contracts" : c}
+                </option>
+              ))}
+            </select>
+          </>
+        )}
+        {anyFilter && (
+          <button type="button" className="filter-clear" onClick={clearFilters}>
+            <IconX size={14} stroke={2.4} aria-hidden />
+            Clear
+          </button>
+        )}
       </div>
 
       {shown.length === 0 && (
@@ -326,7 +407,7 @@ export default function DancesView(props: Props) {
       )}
 
       {view === "cards" ? (
-        <div className="grid" key={`${filter}-${typeFilter}-${activeChoreographer}`}>
+        <div className="grid" key={listKey}>
           {shown.map((dance, i) => {
             const { members, type } = info(dance);
             return (
@@ -358,7 +439,7 @@ export default function DancesView(props: Props) {
         </div>
       ) : (
         shown.length > 0 && (
-          <div className="list" key={`${filter}-${typeFilter}-${activeChoreographer}`}>
+          <div className="list" key={listKey}>
             {shown.map((dance, i) => {
               const { members, short, type } = info(dance);
               const avg = averageAge(members);
