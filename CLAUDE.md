@@ -2,7 +2,7 @@
 
 # tempoh
 
-A choreography tracker for dance teachers (the folder and README still say "Choreo HQ"; the product name is tempoh). It keeps each dance's dancers, progress, song, notes, costumes and performance date together, and tracks solo contracts (sent/signed) and payments (unpaid/partial/paid). Notion is the database.
+A choreography tracker for dance teachers (the folder is still `choreo-hq`; the product name is tempoh). It keeps each dance's dancers, progress, song, notes, costumes and performance date together, and tracks solo contracts (sent/signed) and payments (unpaid/partial/paid). Notion is the database.
 
 Live: https://tempohapp.vercel.app
 
@@ -25,7 +25,7 @@ With an empty `.env.local`, only the demo works.
 
 ## Rules
 - The app reads and writes Notion properties by name. Don't rename properties in the Dances / Dancers / Choreographers databases without updating the code (list is in the README).
-- Song uploads go to Notion file storage: 5 MB limit on free workspaces, 20 MB on paid.
+- Songs upload from the browser to a private Vercel Blob store (up to 100 MB, 4 MB in the demo); Notion keeps a link to each.
 - Never log or return Notion access tokens; keep secrets in `.env.local`.
 
 ## Look and feel
