@@ -37,7 +37,7 @@ Quiet, monochrome, rounded.
 
 ## Working here
 - Deploy: `cd ~/choreo-hq && vercel deploy --prod`. Always run it from this folder; running it from `~` tries to upload the whole home folder. Ask before each production deploy.
-- No git, on purpose. Don't run `git init`, commit, or offer to commit.
+- Code is on GitHub at https://github.com/jmariedev/tempoh (public). Commit only when Jackie asks. This repo's local git config commits as Jacqueline Kosky and pushes through the jmariedev gh login; don't change the global git identity. Never commit `.env.local` or real student names.
 - https://choreo-hq.vercel.app forwards to the same path on tempohapp with a 308 (`src/proxy.ts`). `APP_URL` is set to the tempohapp address.
 - Notion pages: "Tempoh" holds the live data, and "Tempoh template" is the empty master that Notion copies on sign-in. Keep both.
 - Combos and Classes databases are found or created on first use; their IDs are stored in Neon (`combos_ds`, `classes_ds`). Read their properties by name too.
